@@ -1,0 +1,41 @@
+name: Automate Data Preprocessing
+
+# untuk menentukan trigger kapan robot menyala
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'ai4i2020_raw/**'
+            - 'preprocessing/automate_MalifDM.py'
+    workflow_dispatch:
+
+jobs:
+    preprocessing-job:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Mengambil kode dari repository (Checkout)
+          uses: actions/checkout@v3
+
+        - name: Setup Python 3.12.7
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.12.7'
+        
+        - name: Install Depedencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install pandas scikit-learn
+
+        - name: Menjalankan Script Preprocessing Automate
+          run: python preprocessing/automate_MalifDM.py
+
+        - name: Commit dan Push Data Bersih ke Repository
+          run: |
+            git config --local user.email "action@github.com"
+            git config --local user.name "Github Action Bot"
+            git add ai4i2020_preprocessing/ai4i2020_processed.csv
+            # Cek apakah ada perubahan data. jika ada, laukakn commit dan push.
+            git diff-index --quiet HEAD || git commit -m "Auto-update processed dataset via Github Actions"
+            git push
